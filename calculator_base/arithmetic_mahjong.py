@@ -1,0 +1,160 @@
+from collections import Counter
+from itertools import combinations
+
+from calculator_base.constants import MULTIPLY, PLUS, SYMBOLS
+from calculator_base.hand_structure import Hand
+from calculator_base.parser import tile_sort_key
+
+
+class ArithmeticMahjongChecker:
+    """Normal arithmetic-mahjong shape checker: three groups plus one pair."""
+
+    def is_valid_formula(self, tiles):
+        """Check whether four tiles form a + or x arithmetic formula."""
+        values = [self._tile_value(tile) for tile in tiles]
+        if len(values) != 4:
+            return False
+
+        symbols = [value for value in values if value in SYMBOLS]
+        numbers = [value for value in values if isinstance(value, int)]
+        if len(symbols) != 1 or len(numbers) != 3:
+            return False
+
+        op = symbols[0]
+        for i, a in enumerate(numbers):
+            for j, b in enumerate(numbers):
+                if i == j:
+                    continue
+                c = numbers[3 - i - j]
+
+                if op == PLUS and a + b == c:
+                    return True
+                if op == MULTIPLY and a * b == c:
+                    return True
+
+        return False
+
+    def is_kezi(self, tiles):
+        values = [self._tile_value(tile) for tile in tiles]
+        return len(values) == 4 and len(set(values)) == 1
+
+    def is_valid_group(self, tiles):
+        return self.is_kezi(tiles) or self.is_valid_formula(tiles)
+
+    def is_pair(self, tiles):
+        values = [self._tile_value(tile) for tile in tiles]
+        return len(values) == 2 and values[0] == values[1]
+
+    def can_win(self, hand: Hand):
+        """Check the normal arithmetic shape with any existing melded groups."""
+        melded_groups = hand.melded_groups or []
+        meld_count = len(melded_groups)
+        needed_groups = 3 - meld_count
+
+        if needed_groups < 0:
+            return False, []
+
+        if hand.hand_groups:
+            if not self._validate_grouped_arithmetic(hand.hand_groups, needed_groups):
+                return False, []
+            return True, melded_groups + hand.hand_groups
+
+        hand_tiles = list(hand.hand_tiles)
+        if len(hand_tiles) != needed_groups * 4 + 2:
+            return False, []
+
+        can_partition, hand_groups = self._partition_arithmetic(hand_tiles, needed_groups)
+        if not can_partition:
+            return False, []
+
+        return True, melded_groups + hand_groups
+
+    def _validate_grouped_arithmetic(self, groups, expected_four_tile_groups):
+        four_tile_groups = 0
+        pair_count = 0
+
+        for group in groups:
+            if len(group) == 2:
+                if not self.is_pair(group):
+                    return False
+                pair_count += 1
+            elif len(group) == 4:
+                if not self.is_valid_group(group):
+                    return False
+                four_tile_groups += 1
+            else:
+                return False
+
+        return four_tile_groups == expected_four_tile_groups and pair_count == 1
+
+    def _partition_arithmetic(self, tiles, n_groups):
+        if len(tiles) != n_groups * 4 + 2:
+            return False, []
+
+        for pair_indices in combinations(range(len(tiles)), 2):
+            pair = [tiles[idx] for idx in pair_indices]
+            if not self.is_pair(pair):
+                continue
+
+            remaining = [
+                tile for idx, tile in enumerate(tiles) if idx not in set(pair_indices)
+            ]
+            can_groups, groups = self._partition_groups(remaining, n_groups)
+            if can_groups:
+                return True, groups + [pair]
+
+        return False, []
+
+    def _partition_groups(self, tiles, n_groups):
+        if n_groups == 0:
+            return (len(tiles) == 0), []
+        if len(tiles) != n_groups * 4:
+            return False, []
+
+        tiles_sorted = sorted(tiles, key=lambda tile: tile_sort_key(self._tile_value(tile)))
+        return self._try_partition_groups(tiles_sorted, [])
+
+    def _try_partition_groups(self, remaining, groups):
+        if not remaining:
+            return True, groups
+
+        if len(remaining) % 4 != 0:
+            return False, []
+
+        value_counter = Counter(self._tile_value(tile) for tile in remaining)
+        for value, count in value_counter.items():
+            if count >= 4:
+                group, rest = self._take_matching_tiles(remaining, value, 4)
+                can_partition, result = self._try_partition_groups(rest, groups + [group])
+                if can_partition:
+                    return True, result
+
+        first_tile = remaining[0]
+        for combo in combinations(range(1, len(remaining)), 3):
+            used_indices = {0, *combo}
+            group = [first_tile] + [remaining[idx] for idx in combo]
+            if not self.is_valid_formula(group):
+                continue
+
+            rest = [
+                tile for idx, tile in enumerate(remaining) if idx not in used_indices
+            ]
+            can_partition, result = self._try_partition_groups(rest, groups + [group])
+            if can_partition:
+                return True, result
+
+        return False, []
+
+    def _take_matching_tiles(self, tiles, value, count):
+        group = []
+        rest = []
+        for tile in tiles:
+            if self._tile_value(tile) == value and len(group) < count:
+                group.append(tile)
+            else:
+                rest.append(tile)
+        return group, rest
+
+    @staticmethod
+    def _tile_value(tile):
+        return tile.value if hasattr(tile, "value") else tile
