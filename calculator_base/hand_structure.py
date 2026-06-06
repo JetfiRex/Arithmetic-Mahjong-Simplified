@@ -4,7 +4,7 @@ Core hand data structures for the simplified arithmetic mahjong rules.
 
 from typing import Iterable, List, Optional, Union
 
-from calculator_base.constants import ALL_TILES, SYMBOLS
+from calculator_base.constants import ALL_TILES, MULTIPLY, PLUS, SYMBOLS
 
 
 TileValue = Union[int, str]
@@ -70,9 +70,39 @@ class MeldedGroup:
         expected_len = 5 if group_type in {"明杠", "暗杠", "加杠"} else 4
         if len(tiles) != expected_len:
             raise ValueError(f"{group_type}必须是{expected_len}张牌，实际{len(tiles)}张")
+        if not self._is_valid_group_shape(tiles, group_type):
+            raise ValueError(f"{group_type}牌型不合法")
 
         self.tiles = tiles
         self.group_type = group_type
+
+    @classmethod
+    def _is_valid_group_shape(cls, tiles: List[Tile], group_type: str) -> bool:
+        values = [tile.value for tile in tiles]
+        if group_type == "吃":
+            return cls._is_formula_values(values)
+        if group_type in {"碰", "明杠", "暗杠", "加杠"}:
+            return len(set(values)) == 1
+        return False
+
+    @staticmethod
+    def _is_formula_values(values: List[TileValue]) -> bool:
+        symbols = [value for value in values if value in SYMBOLS]
+        numbers = [value for value in values if isinstance(value, int)]
+        if len(values) != 4 or len(symbols) != 1 or len(numbers) != 3:
+            return False
+
+        op = symbols[0]
+        for i, a in enumerate(numbers):
+            for j, b in enumerate(numbers):
+                if i == j:
+                    continue
+                c = numbers[3 - i - j]
+                if op == PLUS and a + b == c:
+                    return True
+                if op == MULTIPLY and a * b == c:
+                    return True
+        return False
 
     def __repr__(self):
         tiles_str = " ".join(str(t) for t in self.tiles)

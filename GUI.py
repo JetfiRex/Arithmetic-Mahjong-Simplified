@@ -192,7 +192,7 @@ class MahjongGUI(tk.Tk):
         ttk.Combobox(
             frame,
             textvariable=self.winning_method,
-            values=("", "自摸", "天胡"),
+            values=("", "点胡", "自摸", "天胡"),
             state="readonly",
             width=8,
         ).pack(anchor="w")

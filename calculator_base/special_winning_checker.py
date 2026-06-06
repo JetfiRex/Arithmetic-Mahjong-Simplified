@@ -35,9 +35,10 @@ class SevenPairsChecker:
 
         pairs = []
         for tiles in value_to_tiles.values():
-            if len(tiles) != 2:
+            if len(tiles) % 2 != 0:
                 return False, []
-            pairs.append(list(tiles))
+            for idx in range(0, len(tiles), 2):
+                pairs.append(list(tiles[idx : idx + 2]))
 
         return len(pairs) == 7, pairs if len(pairs) == 7 else []
 

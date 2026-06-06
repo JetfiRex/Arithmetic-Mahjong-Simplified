@@ -13,7 +13,7 @@ from fan_calculator import calculate_fan
 
 
 LINE_WIDTH = 70
-ALLOWED_WINNING_METHODS = {None, "自摸", "天胡"}
+ALLOWED_WINNING_METHODS = {None, "点胡", "自摸", "天胡"}
 
 
 def print_welcome():
@@ -40,8 +40,8 @@ def print_help():
     print("  (牌)       鸣牌，例如 (1 + 9 10), (4 4 4 4), (4 4 4 4 4 暗)")
     print("  / 或 |     已分组手牌的分组分隔符")
     print("  [牌]       胡牌标记，可选")
-    print("  {方式}     胡牌方式，只支持 {自摸} 和 {天胡}")
-    print("             短别名: {z}/{zm}/{zimo}=自摸, {t}/{th}=天胡")
+    print("  {方式}     胡牌方式，支持 {点胡}、{自摸} 和 {天胡}")
+    print("             短别名: {r}/{ron}=点胡, {z}/{zm}/{zimo}=自摸, {t}/{th}=天胡")
     print()
     print("起胡")
     print("  默认 1 番起胡。形状能胡但 0 番时，UI 会保留结果并给出警告。")
@@ -67,7 +67,7 @@ def choose_mode():
 def ensure_supported_winning_method(hand):
     if hand.winning_method not in ALLOWED_WINNING_METHODS:
         raise ValueError(
-            f"简单版 UI 只支持 {{自摸}} 和 {{天胡}}，当前为 {{{hand.winning_method}}}"
+            f"简单版 UI 只支持 {{点胡}}、{{自摸}} 和 {{天胡}}，当前为 {{{hand.winning_method}}}"
         )
 
 

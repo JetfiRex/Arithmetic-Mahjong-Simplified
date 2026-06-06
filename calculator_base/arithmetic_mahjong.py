@@ -36,7 +36,7 @@ class ArithmeticMahjongChecker:
 
     def is_kezi(self, tiles):
         values = [self._tile_value(tile) for tile in tiles]
-        return len(values) == 4 and len(set(values)) == 1
+        return len(values) in {4, 5} and len(set(values)) == 1
 
     def is_valid_group(self, tiles):
         return self.is_kezi(tiles) or self.is_valid_formula(tiles)
