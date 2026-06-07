@@ -79,11 +79,14 @@ jobs:
             "build-tools;37.0.0" \
             "ndk;28.2.13676358"
           find "$ANDROID_HOME/build-tools" -maxdepth 2 -name aidl -type f -print
+          mkdir -p "$ANDROID_HOME/tools/bin"
+          ln -sf "$SDKMANAGER" "$ANDROID_HOME/tools/bin/sdkmanager"
           mkdir -p "$HOME/.buildozer/android/platform"
           rm -rf "$HOME/.buildozer/android/platform/android-sdk"
           ln -s "$ANDROID_HOME" "$HOME/.buildozer/android/platform/android-sdk"
           rm -rf "$HOME/.buildozer/android/platform/android-ndk-r28c"
           ln -s "$ANDROID_HOME/ndk/28.2.13676358" "$HOME/.buildozer/android/platform/android-ndk-r28c"
+          ls -la "$HOME/.buildozer/android/platform/android-sdk/tools/bin"
           ls -la "$HOME/.buildozer/android/platform"
 
       - name: Build debug APK
