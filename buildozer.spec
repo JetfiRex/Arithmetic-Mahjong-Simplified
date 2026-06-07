@@ -19,11 +19,10 @@ log_level = 2
 warn_on_root = 1
 
 [android]
-android.api = 35
+android.api = 34
 android.minapi = 23
 android.archs = arm64-v8a, armeabi-v7a
 android.permissions =
 android.gradle_dependencies =
 
 [ios]
-
