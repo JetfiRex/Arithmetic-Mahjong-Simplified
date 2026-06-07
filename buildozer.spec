@@ -21,6 +21,7 @@ warn_on_root = 1
 [android]
 android.api = 34
 android.minapi = 23
+android.build_tools = 34.0.0
 android.archs = arm64-v8a, armeabi-v7a
 android.permissions =
 android.gradle_dependencies =

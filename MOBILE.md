@@ -5,9 +5,11 @@
 ## 本地预览
 
 ```powershell
-python -m pip install -r requirements-mobile.txt
-python mobile_app.py
+.\.venv\Scripts\python.exe -m pip install -r requirements-mobile.txt
+.\.venv\Scripts\python.exe mobile_app.py
 ```
+
+如果使用的不是项目 `.venv`，需要先在当前 Python 环境安装 Kivy。
 
 ## Android 打包
 
