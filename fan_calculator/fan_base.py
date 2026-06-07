@@ -35,6 +35,7 @@ class FanType(Enum):
 
     # 4 fan
     QUAN_DUO_BEI = (4, "全多倍")
+    QUAN_ER_WEI = (4, "全二位")
     TIAN_HU = (4, "天胡")
 
     # 3 fan

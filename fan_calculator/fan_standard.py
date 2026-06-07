@@ -134,11 +134,18 @@ def check_san_tong_shi(hand: Hand) -> Optional[FanResult]:
 def check_quan_duo_bei(hand: Hand) -> Optional[FanResult]:
     numbers = get_all_number_tiles(hand)
     if not numbers:
-        return FanResult(FanType.QUAN_DUO_BEI, reason="无数字牌")
+        return None
 
     divisor = reduce(gcd, numbers)
     if divisor >= 4:
         return FanResult(FanType.QUAN_DUO_BEI, reason=f"{divisor}的倍数")
+    return None
+
+
+def check_quan_er_wei(hand: Hand) -> Optional[FanResult]:
+    numbers = get_all_number_tiles(hand)
+    if numbers and all(number >= 10 for number in numbers):
+        return FanResult(FanType.QUAN_ER_WEI)
     return None
 
 
@@ -209,6 +216,7 @@ def check_all_standard_fans(hand: Hand) -> FanResults:
         check_san_ke_zi,
         check_san_tong_shi,
         check_quan_duo_bei,
+        check_quan_er_wei,
         check_quan_san_bei,
         check_quan_yi_wei,
         check_quan_ou_shu,
