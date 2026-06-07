@@ -58,8 +58,40 @@ jobs:
           python -m pip install --upgrade pip wheel setuptools
           python -m pip install buildozer "cython<3.0"
 
+      - name: Prepare Android SDK
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "build-tools;37.0.0" \
+            "ndk;28.2.13676358"
+
       - name: Build debug APK
-        run: buildozer android debug
+        env:
+          ANDROIDSDK: ${{ env.ANDROID_HOME }}
+          ANDROIDNDK: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
+          ANDROIDAPI: "34"
+          ANDROIDMINAPI: "23"
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          spec_path = Path("buildozer.spec")
+          spec = spec_path.read_text(encoding="utf-8")
+          android_header = "[android]\n"
+          sdk_config = (
+              f"{android_header}"
+              f"android.sdk_path = {os.environ['ANDROID_HOME']}\n"
+              f"android.ndk_path = {os.environ['ANDROID_HOME']}/ndk/28.2.13676358\n"
+          )
+          spec = spec.replace(android_header, sdk_config, 1)
+          spec_path.write_text(spec, encoding="utf-8")
+          PY
+          sed -n '/^\[android\]/,/^\[/p' buildozer.spec
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

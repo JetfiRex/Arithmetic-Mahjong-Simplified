@@ -22,6 +22,15 @@ buildozer android debug
 
 生成的 APK 通常在 `bin/` 目录。
 
+Windows 原生安装 Kivy 只能预览界面，不能可靠输出 APK。要在本机输出 APK，建议安装 WSL2 Ubuntu 后在 Ubuntu 里执行：
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git zip unzip openjdk-17-jdk python3 python3-pip python3-venv autoconf automake libtool pkg-config zlib1g-dev libncurses5 libncursesw5 libtinfo5 libffi-dev libssl-dev
+python3 -m pip install --user --upgrade buildozer "cython<3.0"
+buildozer android debug
+```
+
 ## GitHub 自动打包
 
 仓库里已经有 `.github/workflows/android-apk.yml`。推送到 GitHub 后，可以在仓库页面：
