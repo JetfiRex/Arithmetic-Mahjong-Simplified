@@ -6,7 +6,7 @@
 
 [下载 Windows 版 EXE](https://github.com/JetfiRex/Arithmetic-Mahjong-Simplified/releases/latest/download/SuanshuMahjongGUI.exe)
 
-[下载 安卓APK](https://github.com/JetfiRex/Arithmetic-Mahjong-Simplified/releases/latest/download/SuanshuMahjongGUI.exe)
+[下载 安卓APK](https://github.com/JetfiRex/Arithmetic-Mahjong-Simplified/releases/latest/download/SuanshuMahjongAndroid.apk)
 
 2. 一个命令行UI。
 3. 源代码。
