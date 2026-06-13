@@ -47,27 +47,33 @@ class ArithmeticMahjongChecker:
 
     def can_win(self, hand: Hand):
         """Check the normal arithmetic shape with any existing melded groups."""
+        group_options = self.all_win_groups(hand)
+        if not group_options:
+            return False, []
+        return True, group_options[0]
+
+    def all_win_groups(self, hand: Hand):
+        """Return every valid normal arithmetic grouping for the hand."""
         melded_groups = hand.melded_groups or []
         meld_count = len(melded_groups)
         needed_groups = 3 - meld_count
 
         if needed_groups < 0:
-            return False, []
+            return []
 
         if hand.hand_groups:
             if not self._validate_grouped_arithmetic(hand.hand_groups, needed_groups):
-                return False, []
-            return True, melded_groups + hand.hand_groups
+                return []
+            return [melded_groups + hand.hand_groups]
 
         hand_tiles = list(hand.hand_tiles)
         if len(hand_tiles) != needed_groups * 4 + 2:
-            return False, []
+            return []
 
-        can_partition, hand_groups = self._partition_arithmetic(hand_tiles, needed_groups)
-        if not can_partition:
-            return False, []
-
-        return True, melded_groups + hand_groups
+        return [
+            melded_groups + hand_groups
+            for hand_groups in self._partition_arithmetic_all(hand_tiles, needed_groups)
+        ]
 
     def _validate_grouped_arithmetic(self, groups, expected_four_tile_groups):
         four_tile_groups = 0
@@ -88,8 +94,17 @@ class ArithmeticMahjongChecker:
         return four_tile_groups == expected_four_tile_groups and pair_count == 1
 
     def _partition_arithmetic(self, tiles, n_groups):
-        if len(tiles) != n_groups * 4 + 2:
+        group_options = self._partition_arithmetic_all(tiles, n_groups)
+        if not group_options:
             return False, []
+        return True, group_options[0]
+
+    def _partition_arithmetic_all(self, tiles, n_groups):
+        if len(tiles) != n_groups * 4 + 2:
+            return []
+
+        results = []
+        seen = set()
 
         for pair_indices in combinations(range(len(tiles)), 2):
             pair = [tiles[idx] for idx in pair_indices]
@@ -99,35 +114,56 @@ class ArithmeticMahjongChecker:
             remaining = [
                 tile for idx, tile in enumerate(tiles) if idx not in set(pair_indices)
             ]
-            can_groups, groups = self._partition_groups(remaining, n_groups)
-            if can_groups:
-                return True, groups + [pair]
+            for groups in self._partition_groups_all(remaining, n_groups):
+                candidate = groups + [pair]
+                key = self._groups_signature(candidate)
+                if key in seen:
+                    continue
+                seen.add(key)
+                results.append(candidate)
 
-        return False, []
+        return results
 
     def _partition_groups(self, tiles, n_groups):
-        if n_groups == 0:
-            return (len(tiles) == 0), []
-        if len(tiles) != n_groups * 4:
+        group_options = self._partition_groups_all(tiles, n_groups)
+        if not group_options:
             return False, []
+        return True, group_options[0]
+
+    def _partition_groups_all(self, tiles, n_groups):
+        if n_groups == 0:
+            return [[]] if len(tiles) == 0 else []
+        if len(tiles) != n_groups * 4:
+            return []
 
         tiles_sorted = sorted(tiles, key=lambda tile: tile_sort_key(self._tile_value(tile)))
-        return self._try_partition_groups(tiles_sorted, [])
+        return self._try_partition_groups_all(tiles_sorted, [])
 
     def _try_partition_groups(self, remaining, groups):
+        group_options = self._try_partition_groups_all(remaining, groups)
+        if not group_options:
+            return False, []
+        return True, group_options[0]
+
+    def _try_partition_groups_all(self, remaining, groups):
         if not remaining:
-            return True, groups
+            return [groups]
 
         if len(remaining) % 4 != 0:
-            return False, []
+            return []
 
+        results = []
+        seen = set()
         value_counter = Counter(self._tile_value(tile) for tile in remaining)
-        for value, count in value_counter.items():
+        for value, count in sorted(value_counter.items(), key=lambda item: tile_sort_key(item[0])):
             if count >= 4:
                 group, rest = self._take_matching_tiles(remaining, value, 4)
-                can_partition, result = self._try_partition_groups(rest, groups + [group])
-                if can_partition:
-                    return True, result
+                for result in self._try_partition_groups_all(rest, groups + [group]):
+                    key = self._groups_signature(result)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    results.append(result)
 
         first_tile = remaining[0]
         for combo in combinations(range(1, len(remaining)), 3):
@@ -139,11 +175,14 @@ class ArithmeticMahjongChecker:
             rest = [
                 tile for idx, tile in enumerate(remaining) if idx not in used_indices
             ]
-            can_partition, result = self._try_partition_groups(rest, groups + [group])
-            if can_partition:
-                return True, result
+            for result in self._try_partition_groups_all(rest, groups + [group]):
+                key = self._groups_signature(result)
+                if key in seen:
+                    continue
+                seen.add(key)
+                results.append(result)
 
-        return False, []
+        return results
 
     def _take_matching_tiles(self, tiles, value, count):
         group = []
@@ -154,6 +193,18 @@ class ArithmeticMahjongChecker:
             else:
                 rest.append(tile)
         return group, rest
+
+    def _groups_signature(self, groups):
+        normalized_groups = []
+        for group in groups:
+            values = tuple(sorted((self._tile_value(tile) for tile in group), key=tile_sort_key))
+            normalized_groups.append(values)
+        return tuple(
+            sorted(
+                normalized_groups,
+                key=lambda values: tuple(tile_sort_key(value) for value in values),
+            )
+        )
 
     @staticmethod
     def _tile_value(tile):

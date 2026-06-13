@@ -2,8 +2,12 @@
 
 本库提供完整的算术麻将（简单版）的番数计算器。内容包括
 
-1. 一个开箱能用的GUI计算器。目前支持Windows版本，可以直接下载可执行文件：
+1. 一个开箱能用的GUI计算器。目前支持Windows版本和手机安卓版，可以直接下载可执行文件：
+
 [下载 Windows 版 EXE](https://github.com/JetfiRex/Arithmetic-Mahjong-Simplified/releases/latest/download/SuanshuMahjongGUI.exe)
+
+[下载 安卓APK](https://github.com/JetfiRex/Arithmetic-Mahjong-Simplified/releases/latest/download/SuanshuMahjongGUI.exe)
+
 2. 一个命令行UI。
 3. 源代码。
 4. 规则书。

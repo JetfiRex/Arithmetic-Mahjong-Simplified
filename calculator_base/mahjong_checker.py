@@ -56,13 +56,18 @@ class ArithmeticMahjong:
         """
         win_options = []
 
-        can_arithmetic, arithmetic_groups = self.arithmetic_checker.can_win(hand)
-        if can_arithmetic:
+        arithmetic_options = self.arithmetic_checker.all_win_groups(hand)
+        if arithmetic_options:
+            arithmetic_groups, arithmetic_fan_info = self._best_groups_for_fan(
+                hand,
+                arithmetic_options,
+                "算术麻将",
+            )
             win_options.append(
                 (
                     "算术麻将",
                     arithmetic_groups,
-                    self._calculate_fan(hand, arithmetic_groups, "算术麻将"),
+                    arithmetic_fan_info,
                 )
             )
 
@@ -239,6 +244,21 @@ class ArithmeticMahjong:
         if not fan_info:
             return 0
         return fan_info.get("total_fan", 0)
+
+    def _best_groups_for_fan(self, source_hand, group_options, win_type):
+        best_groups = group_options[0]
+        best_fan_info = self._calculate_fan(source_hand, best_groups, win_type)
+        best_key = (self._fan_total(best_fan_info),)
+
+        for groups in group_options[1:]:
+            fan_info = self._calculate_fan(source_hand, groups, win_type)
+            key = (self._fan_total(fan_info),)
+            if key > best_key:
+                best_groups = groups
+                best_fan_info = fan_info
+                best_key = key
+
+        return best_groups, best_fan_info
 
     @staticmethod
     def _win_type_priority(win_type):
